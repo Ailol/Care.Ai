@@ -1,0 +1,62 @@
+name: Smart PR Update with LLM
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'feat/**'
+
+jobs:
+  analyze-and-update:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Analyze Changes with Care.AI
+      id: analyze
+      run: |
+        # Get diff
+        DIFF=$(git diff origin/main...HEAD)
+        
+        # Get commit messages
+        COMMITS=$(git log --pretty=format:"%s: %b" origin/main..HEAD)
+        
+        # Call Care.AI to analyze
+        ANALYSIS=$(curl -X POST http://your-care-ai-url/api/kernel/execute \
+          -H "Content-Type: application/json" \
+          -d '{
+            "type": "chat-completion",
+            "data": {
+              "messages": [{
+                "role": "system",
+                "content": "Analyze these code changes and summarize what was done in 2-3 bullet points for a PR description."
+              }, {
+                "role": "user", 
+                "content": "Commits:\n'"$COMMITS"'\n\nDiff:\n'"$DIFF"'"
+              }]
+            }
+          }' | jq -r '.result.message')
+        
+        echo "analysis=$ANALYSIS" >> $GITHUB_OUTPUT
+    
+    - name: Update PR Description
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        PR_NUMBER=$(gh pr list --head ${{ github.ref_name }} --json number -q '.[0].number')
+        
+        if [ -n "$PR_NUMBER" ]; then
+          CURRENT_BODY=$(gh pr view $PR_NUMBER --json body -q '.body')
+          
+          NEW_BODY="$CURRENT_BODY
+
+## 🤖 AI Summary (Updated $(date))
+${{ steps.analyze.outputs.analysis }}
+
+Generated with Care.AI"
+          
+          gh pr edit $PR_NUMBER --body "$NEW_BODY"
+        fi

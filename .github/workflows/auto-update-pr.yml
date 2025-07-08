@@ -1,0 +1,47 @@
+name: Auto Update PR Description
+
+on:
+  push:
+    branches:
+      - 'feature/**'
+      - 'feat/**'
+
+jobs:
+  update-pr:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.number || github.event.before != '0000000000000000000000000000000000000000'
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Find PR and Update Description
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        # Get PR number for this branch
+        PR_NUMBER=$(gh pr list --head ${{ github.ref_name }} --json number -q '.[0].number')
+        
+        if [ -n "$PR_NUMBER" ]; then
+          # Get commit messages since PR was created
+          COMMITS=$(git log --pretty=format:"- %s" origin/main..HEAD)
+          
+          # Get current PR body
+          CURRENT_BODY=$(gh pr view $PR_NUMBER --json body -q '.body')
+          
+          # Update section or append
+          if echo "$CURRENT_BODY" | grep -q "## Recent Changes"; then
+            # Update existing section
+            NEW_BODY=$(echo "$CURRENT_BODY" | sed '/## Recent Changes/,/##\|$/c\## Recent Changes\n'"$COMMITS"'\n')
+          else
+            # Append new section
+            NEW_BODY="$CURRENT_BODY
+
+## Recent Changes
+$COMMITS"
+          fi
+          
+          # Update PR
+          gh pr edit $PR_NUMBER --body "$NEW_BODY"
+        fi
