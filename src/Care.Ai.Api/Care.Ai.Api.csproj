@@ -5,7 +5,4 @@
   <ItemGroup>
     <ProjectReference Include="../../packages/Care.Ai.Kernel/Care.Ai.Kernel.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Dapr.AspNetCore" />
-  </ItemGroup>
 </Project>

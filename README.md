@@ -1,13 +1,12 @@
 # Care.Ai.Kernel
 
-A unified AI kernel gateway that routes requests to multiple AI orchestration platforms via Dapr/MessageBus.
+A unified AI kernel gateway that routes requests to multiple AI orchestration platforms.
 
 ## Quick Start
 
 ### Prerequisites
 - .NET 9 SDK
-- Docker (for Dapr and dependencies)
-- Dapr CLI
+- Docker (for dependencies)
 
 ### Building the Project
 
@@ -27,11 +26,11 @@ dotnet build
 dotnet run --project src/Care.Ai.AppHost
 ```
 
-### Running with Dapr
+### Running Locally
 
 ```bash
-# Start Care.Ai.Api with Dapr
-dapr run --app-id care-ai-api --app-port 5000 --dapr-http-port 3500 -- dotnet run --project src/Care.Ai.Api
+# Start Care.Ai.Api
+dotnet run --project src/Care.Ai.Api
 ```
 
 ## Architecture

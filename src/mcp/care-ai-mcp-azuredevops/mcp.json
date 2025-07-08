@@ -1,0 +1,15 @@
+{
+  "name": "care-ai-mcp-azuredevops",
+  "version": "1.0.0",
+  "description": "Azure DevOps MCP server for PR management",
+  "tools": [
+    {
+      "name": "pr_update_description",
+      "description": "Update the description of a pull request"
+    },
+    {
+      "name": "pr_get",
+      "description": "Get details of a pull request"
+    }
+  ]
+}

@@ -7,7 +7,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services
 builder.Services.AddControllers();
-builder.Services.AddDaprClient();
 builder.Services.AddHttpClient();
 
 // Configure Semantic Kernel with Ollama

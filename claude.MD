@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Care.AI.Kernel is a unified AI kernel gateway that routes requests to multiple AI orchestration platforms (Semantic Kernel, LlamaIndex, LangChain, etc.) via Dapr/MessageBus. It's a smart router, NOT an AI orchestrator itself.
+Care.AI.Kernel is a unified AI kernel gateway that routes requests to multiple AI orchestration platforms (Semantic Kernel, LlamaIndex, LangChain, etc.). It's a smart router, NOT an AI orchestrator itself.
 
 ## Key Architecture Principles
 
@@ -21,8 +21,7 @@ Care.AI.Kernel is a unified AI kernel gateway that routes requests to multiple A
 
 - .NET 9
 - Aspire for orchestration
-- Dapr for service mesh
-- MessageBus for communication
+- YARP for reverse proxy capabilities
 - Directory.Packages.props for central package management
 
 ### Common Commands
@@ -37,45 +36,35 @@ dotnet run --project Care.AI.AppHost
 # Run tests
 dotnet test
 
-# Run with Dapr locally
-dapr run --app-id care-ai-kernel --app-port 5000 -- dotnet run
+# Run API locally
+dotnet run --project src/Care.Ai.Api
 ```
 
-## MessageBus Patterns
+## Communication Patterns
 
-### Setup
-
-```csharp
-builder.Services.AddMessageBus()
-    .WithAllBuses("pubsub-rabbitmq")  // Matches Dapr component name
-    .Build();
-```
-
-### Service Invocation
+### Direct HTTP Communication
 
 ```csharp
-var response = await _messageBus.Invoke.InvokeAsync<Response>(
-    HttpMethod.Post,
-    provider.ServiceId,      // Dapr app-id
-    provider.ExecuteEndpoint, // e.g., "/execute"
+var response = await _httpClient.PostAsJsonAsync(
+    $"{provider.BaseUrl}{provider.ExecuteEndpoint}",
     request);
 ```
 
-### Dapr Component Required
+### YARP Proxy Configuration
 
-Create `dapr/components/pubsub-rabbitmq.yaml`:
-
-```yaml
-apiVersion: dapr.io/v1alpha1
-kind: Component
-metadata:
-  name: pubsub-rabbitmq
-spec:
-  type: pubsub.rabbitmq
-  version: v1
-  metadata:
-    - name: host
-      value: 'amqp://rabbitmq:5672'
+```json
+{
+  "ReverseProxy": {
+    "Routes": {
+      "webhook-route": {
+        "ClusterId": "api-cluster",
+        "Match": {
+          "Path": "/webhook/{**catch-all}"
+        }
+      }
+    }
+  }
+}
 ```
 
 ## Project Structure
@@ -142,7 +131,7 @@ public interface IKernelProviderManifest
     string ProviderId { get; }
     List<string> AvailableModels { get; }
     List<string> Operations { get; }
-    string ServiceId { get; }  // Dapr app-id
+    string ServiceId { get; }  // Service identifier
     string ExecuteEndpoint { get; }
     int Priority { get; }
 }
@@ -150,10 +139,10 @@ public interface IKernelProviderManifest
 
 ## Important Notes
 
-1. **MessageBus First**: Always use MessageBus for provider communication
-2. **CloudEvents**: Events are automatically wrapped in CloudEvent format
-3. **Resilience**: Built-in retry, circuit breaker, timeout handling
-4. **Telemetry**: Automatic Activity tracking for observability
+1. **HTTP Communication**: Direct HTTP calls to provider endpoints
+2. **YARP Integration**: Use YARP for webhook proxying
+3. **Resilience**: Built-in retry and timeout handling
+4. **Telemetry**: Automatic logging and observability
 5. **No Hardcoding**: Everything discovered at runtime via manifests
 
 ## Testing Strategy
@@ -161,14 +150,14 @@ public interface IKernelProviderManifest
 dont add these yet
 
 - Unit tests for each component
-- Integration tests with Dapr test containers
+- Integration tests with test containers
 - Use xUnit with async test patterns
-- Mock MessageBus for isolated testing
+- Mock HTTP clients for isolated testing
 
 ## Common Pitfalls to Avoid
 
 1. Don't create files over 40 lines
 2. Don't hardcode provider information
-3. Don't bypass MessageBus for communication
+3. Don't hardcode service endpoints
 4. Don't implement AI logic in the gateway
 5. Don't use multiple classes per file

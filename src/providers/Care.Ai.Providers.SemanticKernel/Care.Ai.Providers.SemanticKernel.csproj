@@ -5,7 +5,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Dapr.AspNetCore" />
     <PackageReference Include="Microsoft.SemanticKernel" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" />
   </ItemGroup>

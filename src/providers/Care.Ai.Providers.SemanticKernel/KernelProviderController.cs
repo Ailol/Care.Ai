@@ -26,7 +26,7 @@ public class KernelProviderController : ControllerBase
         Version = "1.0.0",
         AvailableModels = Models.ToList(),
         Operations = new List<string> { "chat-completion" },
-        ServiceId = _configuration["Dapr:AppId"] ?? "semantic-kernel-provider",
+        ServiceId = "semantic-kernel-provider",
         ExecuteEndpoint = "/execute",
         Priority = 100,
         Skills = new Dictionary<string, object>
