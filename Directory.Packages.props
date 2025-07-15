@@ -10,13 +10,29 @@
     <PackageVersion Include="Chc.MessageBus" Version="0.0.2-290" />
     <PackageVersion Include="Dapr.AspNetCore" Version="1.14.0" />
     <PackageVersion Include="Dapr.Client" Version="1.14.0" />
-    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.0" />
+    <PackageVersion Include="Docker.DotNet" Version="3.125.15" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting.Abstractions" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.6" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="9.0.6" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.11.0" />
     <PackageVersion Include="Microsoft.SemanticKernel" Version="1.59.0" />
     <PackageVersion Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.59.0" />
+    <PackageVersion Include="Microsoft.SemanticKernel.Connectors.Ollama" Version="1.59.0-alpha" />
     <PackageVersion Include="Moq" Version="4.20.70" />
     <PackageVersion Include="Scrutor" Version="5.0.1" />
     <PackageVersion Include="xunit" Version="2.9.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="2.8.2" />
+    <!-- Local packages -->
+    <PackageVersion Include="Care.Ai.Kernel.Abstractions" Version="1.0.0-alpha.1" />
+    <PackageVersion Include="Care.Ai.Kernel" Version="1.0.0-alpha.1" />
+    <PackageVersion Include="Care.Ai.Frameworks.SemanticKernel" Version="1.0.0-alpha.1" />
+    <PackageVersion Include="Care.Ai.Frameworks.Rag" Version="1.0.0-alpha.1" />
+    <PackageVersion Include="YamlDotNet" Version="16.3.0" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.6" />
+    <PackageVersion Include="System.Text.Json" Version="9.0.6" />
+    <PackageVersion Include="supabase" Version="1.1.1" />
+    <PackageVersion Include="Npgsql" Version="9.0.2" />
   </ItemGroup>
 </Project>

@@ -4,6 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Care.Ai.Api.Controllers;
 
+public record RagQueryRequest(
+    string Query,
+    string? CollectionName = null,
+    int? TopK = null);
+
 /// <summary>
 /// Main API controller for AI kernel operations
 /// </summary>
@@ -64,6 +69,10 @@ public class KernelController : ControllerBase
             .OrderBy(o => o)
             .ToList();
         
+        // Add kernel-level operations
+        operations.Add("rag-query-with-llm");
+        operations = operations.Distinct().OrderBy(o => o).ToList();
+        
         // Aggregate all unique models across all providers
         var models = providers
             .SelectMany(p => p.AvailableModels)
@@ -78,5 +87,25 @@ public class KernelController : ControllerBase
             availableModels = models,
             totalProviders = providers.Count
         });
+    }
+    
+    [HttpPost("rag-query")]
+    public async Task<ActionResult<IResponse>> RagQuery(
+        [FromBody] RagQueryRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var kernelRequest = new Request
+        {
+            Type = "rag-query-with-llm",
+            Data = new Dictionary<string, object>
+            {
+                ["collectionName"] = request.CollectionName ?? "default",
+                ["query"] = request.Query,
+                ["topK"] = request.TopK ?? 5
+            }
+        };
+        
+        var response = await _kernel.ExecuteAsync(kernelRequest, cancellationToken);
+        return Ok(response);
     }
 }

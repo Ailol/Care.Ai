@@ -1,8 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
-  <PropertyGroup>
-    <RootNamespace>Care.Ai.MCP</RootNamespace>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="../../packages/Care.Ai.Kernel/Care.Ai.Kernel.csproj" />
-  </ItemGroup>
-</Project>

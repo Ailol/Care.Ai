@@ -1,44 +1,74 @@
 {
-    "name": "Care.AI Development Container",
-    "image": "mcr.microsoft.com/devcontainers/dotnet:1-9.0",
-    "features": {
-        "ghcr.io/devcontainers/features/dotnet:2": {
-            "version": "9.0"
-        },
-        "ghcr.io/devcontainers/features/azure-cli:1": {},
-        "ghcr.io/devcontainers/features/github-cli:1": {}
+  "name": "Care.AI with .NET Aspire",
+  "image": "mcr.microsoft.com/devcontainers/dotnet:9.0-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": true,
+      "moby": true
     },
-    "forwardPorts": [5000, 5050, 15888],
-    "portsAttributes": {
-        "5000": {
-            "label": "Care.AI API - Webhook Endpoint",
-            "onAutoForward": "notify",
-            "visibility": "public"
-        },
-        "5050": {
-            "label": "MCP Gateway",
-            "onAutoForward": "silent"
-        },
-        "15888": {
-            "label": "Aspire Dashboard",
-            "onAutoForward": "openBrowser"
-        }
+    "ghcr.io/devcontainers/features/powershell:1": {}
+  },
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  },
+  "forwardPorts": [5000, 5050, 15888, 16379, 15672],
+  "portsAttributes": {
+    "5000": {
+      "label": "Care.AI API - Webhook Endpoint",
+      "onAutoForward": "notify",
+      "visibility": "public"
     },
-    "postCreateCommand": "chmod +x ./build-packages.sh && ./build-packages.sh && dotnet restore",
-    "postStartCommand": "echo 'Ready! Run: dotnet run --project src/Care.Ai.AppHost'",
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "ms-dotnettools.csdevkit",
-                "ms-dotnettools.csharp",
-                "ms-azuretools.vscode-docker"
-            ]
-        },
-        "codespaces": {
-            "openFiles": [
-                "README.md"
-            ]
-        }
+    "5050": {
+      "label": "MCP Gateway",
+      "onAutoForward": "silent"
     },
-    "waitFor": "postCreateCommand"
+    "15888": {
+      "label": "Aspire Dashboard",
+      "onAutoForward": "openBrowser"
+    },
+    "16379": {
+      "label": "Redis",
+      "onAutoForward": "silent"
+    },
+    "15672": {
+      "label": "RabbitMQ Management",
+      "onAutoForward": "silent"
+    }
+  },
+  "onCreateCommand": "dotnet new install Aspire.ProjectTemplates::9.3.1 --force && ./build-packages.sh",
+  "postStartCommand": "dotnet dev-certs https --trust",
+  "postCreateCommand": "echo '✅ Care.AI Codespace is ready! Run: dotnet run --project src/Care.Ai.AppHost'",
+  "runArgs": [
+    "--sysctl",
+    "net.ipv6.conf.all.disable_ipv6=0",
+    "--sysctl",
+    "net.ipv6.conf.default.forwarding=1",
+    "--sysctl",
+    "net.ipv6.conf.all.forwarding=1"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.csharp",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "dotnet.defaultSolution": "Care.Ai.sln"
+      }
+    },
+    "codespaces": {
+      "openFiles": [
+        "README.md",
+        "CODESPACES_QUICKSTART.md"
+      ]
+    }
+  },
+  "remoteEnv": {
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "DOTNET_ENVIRONMENT": "Development"
+  }
 }

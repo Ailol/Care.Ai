@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS8618</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="**/*.md" />
+    <None Include="**/*.txt" />
+    <None Include="**/*.json" />
+    <None Include="**/*.yaml" />
+    <None Include="**/*.yml" />
+  </ItemGroup>
+
+</Project>

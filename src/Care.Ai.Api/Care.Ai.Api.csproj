@@ -4,5 +4,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../packages/Care.Ai.Kernel/Care.Ai.Kernel.csproj" />
+    <ProjectReference Include="../../packages/frameworks/Care.Ai.Frameworks.Rag/Care.Ai.Frameworks.Rag.csproj" />
+    <ProjectReference Include="../../packages/frameworks/Care.Ai.Frameworks.SemanticKernel/Care.Ai.Frameworks.SemanticKernel.csproj" />
+    <ProjectReference Include="../../packages/providers/Care.Ai.Providers.PostgreSQL/Care.Ai.Providers.PostgreSQL.csproj" />
   </ItemGroup>
 </Project>

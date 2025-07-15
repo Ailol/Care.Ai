@@ -2,4 +2,15 @@
   <PropertyGroup>
     <AspireProjectMetadataIncludeSource>false</AspireProjectMetadataIncludeSource>
   </PropertyGroup>
+
+  <!-- Auto-generate NuGet package on build for package projects -->
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)packages/nupkg</PackageOutputPath>
+  </PropertyGroup>
+
+  <!-- Ensure package output directory exists -->
+  <Target Name="EnsureNuGetPackageDirectory" BeforeTargets="GenerateNuspec">
+    <MakeDir Directories="$(PackageOutputPath)" />
+  </Target>
 </Project>

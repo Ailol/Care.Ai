@@ -13,9 +13,6 @@
     <PackageReference Include="Aspire.Hosting.Redis" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../Care.Ai.Api/Care.Ai.Api.csproj" />
-    <ProjectReference Include="../Care.Ai.MCP/Care.Ai.MCP.csproj" />
-    <ProjectReference Include="../Care.Ai.McpGateway/Care.Ai.McpGateway.csproj" />
-    <ProjectReference Include="../providers/Care.Ai.Providers.SemanticKernel/Care.Ai.Providers.SemanticKernel.csproj" />
+    <ProjectReference Include="../src/Care.Ai.Api/Care.Ai.Api.csproj" />
   </ItemGroup>
 </Project>

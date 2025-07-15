@@ -2,78 +2,101 @@
 
 A unified AI kernel gateway that routes requests to multiple AI orchestration platforms.
 
-## Quick Start
+## 🚀 Quick Start with GitHub Codespaces
 
-### Prerequisites
-- .NET 9 SDK
-- Docker (for dependencies)
+### 1. Create a Codespace
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/your-username/Care.Ai)
 
-### Building the Project
+Or manually:
+- Click the green **Code** button above
+- Select **Codespaces** tab
+- Click **Create codespace on main**
 
-1. Build NuGet packages:
-```bash
-./build-packages.sh
-```
+### 2. Wait for Setup
+The Codespace will automatically:
+- Install .NET 9 and Aspire workload
+- Set up Docker-in-Docker for Aspire containers
+- Build Care.AI packages
+- Configure HTTPS certificates
 
-2. Build the solution:
-```bash
-dotnet build
-```
-
-### Running with Aspire
+### 3. Run the Application
+Once setup completes (3-5 minutes):
 
 ```bash
 dotnet run --project src/Care.Ai.AppHost
 ```
 
-### Running Locally
+The Aspire Dashboard will open automatically at port 15888.
 
+### 3. Get Your Webhook URL
+1. Go to the **PORTS** tab in the terminal panel
+2. Find port **5000** (labeled "API - Azure DevOps Webhook")
+3. Click the copy icon to get your public URL
+4. Add `/api/webhook/azure` to the URL
+
+Your webhook URL will look like:
+```
+https://username-careai-randomstring-5000.app.github.dev/api/webhook/azure
+```
+
+### 4. Configure Azure DevOps
+1. In Azure DevOps: Project Settings → Service Hooks
+2. Create a new Web Hook subscription
+3. Event: Pull Request Created/Updated
+4. URL: Your codespace webhook URL from step 3
+5. Test with a new PR!
+
+## 📁 Project Structure
+
+```
+Care.Ai.Kernel/
+├── packages/              # NuGet packages
+│   ├── Care.Ai.Kernel.Abstractions/
+│   └── Care.Ai.Kernel/
+├── src/
+│   ├── Care.Ai.Api/      # Main API with webhook handler
+│   ├── Care.Ai.AppHost/  # Aspire orchestration
+│   └── providers/        # AI provider implementations
+└── .devcontainer/        # Codespaces configuration
+```
+
+## 🛠️ Local Development
+
+### Prerequisites
+- .NET 9 SDK
+- Docker
+
+### Building
 ```bash
-# Start Care.Ai.Api
-dotnet run --project src/Care.Ai.Api
+# Build packages
+./build-packages.sh
+
+# Run with Aspire
+dotnet run --project src/Care.Ai.AppHost
 ```
 
-## Architecture
+## 🔗 Webhook Integration
 
-Care.Ai.Kernel acts as a smart router that:
-- Auto-discovers AI providers via manifest endpoints
-- Routes requests based on model availability
-- Provides optional AI-powered routing
-- Maintains zero coupling with provider internals
+The API automatically handles Azure DevOps webhooks at `/api/webhook/azure`:
 
-## API Usage
-
-### Execute AI Request
-```http
-POST /api/kernel/execute
-Content-Type: application/json
-
+```csharp
+// Webhook controller handles PR events
+[HttpPost("azure")]
+public async Task<IActionResult> HandleAzureWebhook()
 {
-  "type": "chat",
-  "data": {
-    "model": "gpt-4",
-    "message": "Hello, world!"
-  }
+    // Receives PR webhook
+    // Generates AI description
+    // Updates PR via Azure DevOps API
 }
 ```
 
-### Get Available Providers
-```http
-GET /api/kernel/providers
-```
+## 🤝 Contributing
 
-## Configuration
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
 
-Edit `appsettings.json` to configure providers and routing:
+## 📝 License
 
-```json
-{
-  "CareAi": {
-    "Kernel": {
-      "SmartRoutingProvider": "semantic-kernel",
-      "SmartRoutingModel": "gpt-3.5-turbo",
-      "KnownProviders": ["semantic-kernel", "llamaindex"]
-    }
-  }
-}
-```
+[Your License Here]

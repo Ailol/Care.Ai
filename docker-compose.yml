@@ -1,0 +1,130 @@
+version: '3.8'
+
+services:
+  # Care.AI API Gateway
+  care-ai-api:
+    build: ./src/Care.Ai.Api
+    container_name: care-ai-api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - redis
+      - rabbitmq
+      - ollama
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # For Docker discovery
+    networks:
+      - care-ai-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: care-ai-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - care-ai-network
+
+  # RabbitMQ for messaging
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: care-ai-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    networks:
+      - care-ai-network
+
+  # Ollama for local LLMs
+  ollama:
+    image: ollama/ollama:latest
+    container_name: care-ai-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    networks:
+      - care-ai-network
+
+  # LangChain API (LangServe)
+  langchain:
+    image: langchain/langserve:latest
+    container_name: care-ai-langchain
+    labels:
+      - "ai.care.provider=true"
+      - "ai.framework=langchain"
+    ports:
+      - "8001:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
+    networks:
+      - care-ai-network
+
+  # LlamaIndex API
+  llamaindex:
+    image: llamaindex/llamaindex-api:latest
+    container_name: care-ai-llamaindex
+    labels:
+      - "ai.care.provider=true"
+      - "ai.framework=llamaindex"
+    ports:
+      - "8002:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OLLAMA_BASE_URL=http://ollama:11434
+    depends_on:
+      - ollama
+    networks:
+      - care-ai-network
+
+  # Flowise (LangChain visual builder)
+  flowise:
+    image: flowiseai/flowise:latest
+    container_name: care-ai-flowise
+    labels:
+      - "ai.care.provider=true"
+      - "ai.framework=langchain"
+    ports:
+      - "3000:3000"
+    environment:
+      - FLOWISE_USERNAME=${FLOWISE_USERNAME:-admin}
+      - FLOWISE_PASSWORD=${FLOWISE_PASSWORD:-admin}
+      - APIKEY_PATH=/root/.flowise
+      - SECRETKEY_PATH=/root/.flowise
+      - LOG_LEVEL=info
+    volumes:
+      - flowise-data:/root/.flowise
+    networks:
+      - care-ai-network
+
+  # LocalAI (OpenAI compatible API)
+  localai:
+    image: quay.io/go-skynet/local-ai:latest
+    container_name: care-ai-localai
+    labels:
+      - "ai.care.provider=true"
+      - "ai.framework=localai"
+    ports:
+      - "8080:8080"
+    environment:
+      - MODELS_PATH=/models
+    volumes:
+      - localai-models:/models
+    networks:
+      - care-ai-network
+
+volumes:
+  ollama-data:
+  flowise-data:
+  localai-models:
+
+networks:
+  care-ai-network:
+    driver: bridge

@@ -1,4 +1,8 @@
-# GitHub Codespaces Quick Start
+# GitHub Codespaces Quick Start for .NET Aspire
+
+## Prerequisites
+- GitHub account with Codespaces access
+- Azure DevOps project for webhook testing
 
 ## 1. Create a Codespace (30 seconds)
 
@@ -7,13 +11,16 @@ Go to your GitHub repository and click:
 - **Codespaces** tab
 - **Create codespace on main**
 
-## 2. Wait for Setup (2-3 minutes)
+⚠️ **Important**: Choose at least a **4-core machine** for Aspire to run smoothly.
 
-The devcontainer will automatically:
-- Install .NET 9
+## 2. Wait for Setup (3-5 minutes)
+
+The Aspire-optimized devcontainer will automatically:
+- Install .NET 9 with Aspire workload
+- Set up Docker-in-Docker for container orchestration
 - Build the Care.AI packages
-- Restore all dependencies
-- Set up port forwarding
+- Configure HTTPS certificates
+- Set up all required ports
 
 ## 3. Start the Application
 
