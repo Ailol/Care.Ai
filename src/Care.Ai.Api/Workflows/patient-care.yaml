@@ -1,0 +1,14 @@
+Name: PatientCare
+Steps:
+  - Id: assess
+    Type: ai
+    Prompt: "Urgency of symptoms: {{symptoms}}? Return: high/low"
+    
+  - Id: approve
+    Type: human
+    When: assess == 'high'
+    Assign: doctor
+    
+  - Id: treat
+    Type: workflow
+    Ref: TreatmentPlan

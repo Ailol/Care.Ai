@@ -1,60 +1,63 @@
-using Care.Ai.Frameworks.Rag;
-using Care.Ai.Frameworks.SemanticKernel;
-using Care.Ai.Kernel;
-
+using Care.AI;
+using Care.AI.Api.Authentication;
+using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
-        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
-    });
-builder.Services.AddHttpClient();
+// Configure to listen on port 5001
+builder.WebHost.UseUrls("http://localhost:5001");
 
-// Add Care.Ai.Kernel with multiple framework providers
-builder.Services.AddCareAiKernel(builder.Configuration, kernelBuilder =>
-{
-    kernelBuilder.ExposeController = false; // Disable auto-controller since we have a manual one
-    // Register SemanticKernel for agent orchestration
-  
-    
-    // Register RAG framework for RAG processing
-    kernelBuilder.AddFramework<RagFramework>(config =>
-    {
-        config.ServiceId = "rag-framework";
-        config.Options["VectorStoreProvider"] = builder.Configuration["VectorStore:Provider"] 
-            ?? throw new InvalidOperationException("VectorStore:Provider configuration is required");
-        config.Options["VectorStoreUrl"] = builder.Configuration["VectorStore:Url"] 
-            ?? throw new InvalidOperationException("VectorStore:Url configuration is required");
-        config.Options["EmbeddingModel"] = builder.Configuration["Ollama-embedding:Model"] 
-            ?? throw new InvalidOperationException("Ollama-embedding:Model configuration is required");
-        config.Options["EmbeddingEndpoint"] = builder.Configuration["Ollama-embedding:Endpoint"] 
-            ?? throw new InvalidOperationException("Ollama-embedding:Endpoint configuration is required");
-        config.Options["RankerModel"] = builder.Configuration["Ollama-ranker:Model"] 
-            ?? throw new InvalidOperationException("Ollama-ranker:Model configuration is required");
-        config.Options["RankerEndpoint"] = builder.Configuration["Ollama-ranker:Endpoint"] 
-            ?? throw new InvalidOperationException("Ollama-ranker:Endpoint configuration is required");
-    });
-    kernelBuilder.AddFramework<SemanticKernelFramework>(config =>
-    {
-        config.ServiceId = "semantic-kernel-local";
-        config.Options["Model"] = builder.Configuration["Ollama:Model"]
-            ?? throw new InvalidOperationException("Ollama:Model configuration is required");
-        config.Options["Endpoint"] = builder.Configuration["Ollama:Endpoint"]
-            ?? throw new InvalidOperationException("Ollama:Endpoint configuration is required");
-    });
-});
+// Add services
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddDaprClient();
 
-// Add logging
-builder.Services.AddLogging();
+// Add authentication (using mock/dev authentication for demo)
+// In production, replace with real authentication (JWT, Azure AD, etc.)
+builder.Services.AddAuthentication("MockScheme")
+    .AddScheme<MockAuthenticationSchemeOptions, MockAuthenticationHandler>("MockScheme", null);
+builder.Services.AddAuthorization();
+
+builder.Services.AddCareAI();
+
+// Configure kernel with role-based plugins
+builder.Services.AddSingleton<Care.AI.Api.Plugins.AdminPlugin>();
+builder.Services.AddSingleton<Care.AI.Api.Plugins.UserPlugin>();
+builder.Services.AddSingleton<Care.AI.Api.Plugins.TestPlugin>();
+
+// Plugins will be registered in InitializeKernelProvider
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline
+// Initialize the kernel provider
+Care.AI.Extensions.InitializeKernelProvider(app.Services);
+
+// Register plugins after kernel is initialized
+var kernel = Care.AI.KernelProvider.GetKernel();
+var adminPlugin = app.Services.GetRequiredService<Care.AI.Api.Plugins.AdminPlugin>();
+var userPlugin = app.Services.GetRequiredService<Care.AI.Api.Plugins.UserPlugin>();
+var testPlugin = app.Services.GetRequiredService<Care.AI.Api.Plugins.TestPlugin>();
+
+kernel.Plugins.Add(KernelPluginFactory.CreateFromObject(adminPlugin, "Admin"));
+kernel.Plugins.Add(KernelPluginFactory.CreateFromObject(userPlugin, "User"));
+kernel.Plugins.Add(KernelPluginFactory.CreateFromObject(testPlugin, "TestPlugin"));
+
+// Configure pipeline
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseCloudEvents();
+app.MapSubscribeHandler();
+app.MapActorsHandlers();
+
 app.MapControllers();
 
-await app.RunAsync();
+app.Run();

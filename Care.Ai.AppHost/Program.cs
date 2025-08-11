@@ -1,26 +1,42 @@
+using Aspire.Hosting;
+using CommunityToolkit.Aspire.Hosting.Dapr;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
-// Add Redis with fixed port
-var redis = builder.AddRedis("redis", port: 6379);
+// Add Dapr
+builder.AddDapr();
 
-// Add RabbitMQ with fixed ports
-var rabbitmq = builder.AddRabbitMQ("rabbitmq", port: 5672)
-    .WithManagementPlugin(port: 15672);
+// Add Redis for state store
+var redis = builder.AddRedis("redis");
 
-// Add Care.Ai.Api - the main gateway API
-var api = builder.AddProject<Projects.Care_Ai_Api>("care-ai-api")
-    .WithReference(rabbitmq)
-    .WithReference(redis);
+// RabbitMQ removed - using in-memory pubsub for development
 
-// Optionally add LlamaIndex provider as Docker container if it exists
-var dockerfileContext = Path.Combine("..", "src", "providers", "care-ai-providers-llamaindex");
-if (Directory.Exists(dockerfileContext))
-{
-    var llamaIndex = builder.AddDockerfile("llamaindex-provider", dockerfileContext)
-        .WithHttpEndpoint(port: 5051, targetPort: 5051)
-        .WithEnvironment("OLLAMA_ENDPOINT", "http://host.docker.internal:11434")
-        .WithEnvironment("OLLAMA_MODEL", "qwen3-clean:latest")
-        .WithReference(rabbitmq);
-}
+// Add Dapr placement service as a container
+var placement = builder.AddContainer("placement", "daprio/dapr")
+    .WithEndpoint(port: 50005, targetPort: 50005, name: "grpc")
+    .WithArgs("./placement", "--port", "50005")
+    .WithVolume("dapr-placement-data", "/tmp/placement");
+
+
+// Add Dapr scheduler service as a container (in-memory mode for development)
+var scheduler = builder.AddContainer("dapr-scheduler", "daprio/dapr")
+    .WithEndpoint(port: 6060, targetPort: 6060, name: "grpc")
+    .WithArgs("./scheduler", "--port", "6060", "--etcd-data-dir", "/tmp");
+
+// Add Care.Ai.Api with Dapr
+var api = builder.AddProject<Projects.Care_AI_Api>("care-ai-api")
+    .WithReference(redis)
+    .WaitFor(redis)
+    .WaitFor(placement)
+    .WithDaprSidecar(new DaprSidecarOptions
+    {
+        AppPort = 5001,
+        DaprHttpPort = 3500,
+        DaprGrpcPort = 50001,
+        ResourcesPaths = [Path.Combine(Directory.GetCurrentDirectory(), "components")],
+        Config = Path.Combine(Directory.GetCurrentDirectory(), "dapr-config.yaml"),
+        PlacementHostAddress = "localhost:50005",
+        SchedulerHostAddress = "localhost:6060"
+    });
 
 await builder.Build().RunAsync();

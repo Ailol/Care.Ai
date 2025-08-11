@@ -1,0 +1,22 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/Care.AI.sln"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "open-devcontainer",
+            "type": "shell",
+            "command": "echo",
+            "args": ["Please reopen this workspace in the Dev Container using the Command Palette: 'Dev Containers: Reopen in Container'"],
+            "problemMatcher": []
+        }
+    ]
+}

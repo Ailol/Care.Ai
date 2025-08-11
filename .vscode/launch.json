@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run in DevContainer",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "open-devcontainer",
+            "program": "${workspaceFolder}/Care.Ai.AppHost/bin/Debug/net8.0/Care.Ai.AppHost.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Care.Ai.AppHost",
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": "Run AppHost (Local)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/Care.Ai.AppHost/bin/Debug/net8.0/Care.Ai.AppHost.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Care.Ai.AppHost",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            }
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  dapr-services:
+    build: .
+    ports:
+      - "6050:50005"  # Placement
+      - "6060:50006"  # Scheduler
+    container_name: dapr-services
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "placement"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

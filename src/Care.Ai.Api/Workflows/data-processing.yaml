@@ -1,0 +1,13 @@
+Name: DataProcessing
+Steps:
+  - Id: validate
+    Type: code
+    Ref: ValidateInput
+    
+  - Id: enrich
+    Type: ai
+    Prompt: "Extract key entities from: {{data}}"
+    
+  - Id: store
+    Type: code
+    Ref: SaveToDatabase

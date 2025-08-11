@@ -1,11 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
+
   <PropertyGroup>
-    <RootNamespace>Care.Ai.Api</RootNamespace>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="../../packages/Care.Ai.Kernel/Care.Ai.Kernel.csproj" />
-    <ProjectReference Include="../../packages/frameworks/Care.Ai.Frameworks.Rag/Care.Ai.Frameworks.Rag.csproj" />
-    <ProjectReference Include="../../packages/frameworks/Care.Ai.Frameworks.SemanticKernel/Care.Ai.Frameworks.SemanticKernel.csproj" />
-    <ProjectReference Include="../../packages/providers/Care.Ai.Providers.PostgreSQL/Care.Ai.Providers.PostgreSQL.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Swashbuckle.AspNetCore" />
+    <PackageReference Include="Dapr.AspNetCore" />
+    <ProjectReference Include="../../packages/Care.AI/Care.AI.csproj" />
   </ItemGroup>
+
 </Project>

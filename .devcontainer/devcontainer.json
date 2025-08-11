@@ -1,74 +1,16 @@
 {
-  "name": "Care.AI with .NET Aspire",
-  "image": "mcr.microsoft.com/devcontainers/dotnet:9.0-bookworm",
-  "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest",
-      "enableNonRootDocker": true,
-      "moby": true
+    "name": "Dapr Services",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
     },
-    "ghcr.io/devcontainers/features/powershell:1": {}
-  },
-  "hostRequirements": {
-    "cpus": 4,
-    "memory": "8gb",
-    "storage": "32gb"
-  },
-  "forwardPorts": [5000, 5050, 15888, 16379, 15672],
-  "portsAttributes": {
-    "5000": {
-      "label": "Care.AI API - Webhook Endpoint",
-      "onAutoForward": "notify",
-      "visibility": "public"
-    },
-    "5050": {
-      "label": "MCP Gateway",
-      "onAutoForward": "silent"
-    },
-    "15888": {
-      "label": "Aspire Dashboard",
-      "onAutoForward": "openBrowser"
-    },
-    "16379": {
-      "label": "Redis",
-      "onAutoForward": "silent"
-    },
-    "15672": {
-      "label": "RabbitMQ Management",
-      "onAutoForward": "silent"
-    }
-  },
-  "onCreateCommand": "dotnet new install Aspire.ProjectTemplates::9.3.1 --force && ./build-packages.sh",
-  "postStartCommand": "dotnet dev-certs https --trust",
-  "postCreateCommand": "echo '✅ Care.AI Codespace is ready! Run: dotnet run --project src/Care.Ai.AppHost'",
-  "runArgs": [
-    "--sysctl",
-    "net.ipv6.conf.all.disable_ipv6=0",
-    "--sysctl",
-    "net.ipv6.conf.default.forwarding=1",
-    "--sysctl",
-    "net.ipv6.conf.all.forwarding=1"
-  ],
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "ms-dotnettools.csdevkit",
-        "ms-dotnettools.csharp",
-        "ms-azuretools.vscode-docker"
-      ],
-      "settings": {
-        "dotnet.defaultSolution": "Care.Ai.sln"
-      }
-    },
-    "codespaces": {
-      "openFiles": [
-        "README.md",
-        "CODESPACES_QUICKSTART.md"
-      ]
-    }
-  },
-  "remoteEnv": {
-    "ASPNETCORE_ENVIRONMENT": "Development",
-    "DOTNET_ENVIRONMENT": "Development"
-  }
+    "runArgs": [
+        "--name", "dapr-services",
+        "-p", "6050:50005",
+        "-p", "6060:50006"
+    ],
+    "overrideCommand": true,
+    "postCreateCommand": "dapr init --slim",
+    "postStartCommand": "placement --port 50005 & scheduler --port 50006",
+    "forwardPorts": [50005, 50006]
 }

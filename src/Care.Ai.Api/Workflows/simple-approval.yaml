@@ -1,0 +1,10 @@
+Name: SimpleApproval
+Steps:
+  - Id: analyze
+    Type: ai
+    Prompt: "Is this request valid? {{request}} Return: yes/no"
+    
+  - Id: notify
+    Type: code
+    When: analyze == 'yes'
+    Ref: SendNotification

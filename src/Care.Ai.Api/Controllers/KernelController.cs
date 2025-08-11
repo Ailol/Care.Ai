@@ -1,111 +1,51 @@
-using Care.Ai.Kernel.Abstractions;
-using Care.Ai.Kernel.Models;
+using Care.AI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Dapr.Actors;
+using Dapr.Actors.Client;
 
-namespace Care.Ai.Api.Controllers;
+namespace Care.AI.Api.Controllers;
 
-public record RagQueryRequest(
-    string Query,
-    string? CollectionName = null,
-    int? TopK = null);
-
-/// <summary>
-/// Main API controller for AI kernel operations
-/// </summary>
 [ApiController]
-[Route("api/[controller]")]
-public class KernelController : ControllerBase
+[Route("execute")]
+[Authorize] // Require authentication
+public class KernelController(IActorProxyFactory actorProxyFactory) : ControllerBase
 {
-    private readonly IKernel _kernel;
-    private readonly ILogger<KernelController> _logger;
-
-    public KernelController(IKernel kernel, ILogger<KernelController> logger)
+    [HttpPost]
+    public async Task<IActionResult> Execute([FromBody] ExecuteRequest request)
     {
-        _kernel = kernel;
-        _logger = logger;
-    }
-
-    [HttpPost("execute")]
-    public async Task<ActionResult<IResponse>> Execute(
-        [FromBody] Request request,
-        CancellationToken cancellationToken = default)
-    {
-        try
+        var actor = actorProxyFactory.CreateActorProxy<IKernelService>(
+            new ActorId(request.UserId),
+            "KernelService");
+        
+        // Convert args to Dictionary<string, object> if needed
+        Dictionary<string, object>? arguments = null;
+        if (request.Args != null)
         {
-            var response = await _kernel.ExecuteAsync(request, cancellationToken);
-            return Ok(response);
-        }
-        catch (Exception ex)
-        {
-#pragma warning disable CA1848 // Use the LoggerMessage delegates
-            _logger.LogError(ex, "Error executing kernel request");
-#pragma warning restore CA1848 // Use the LoggerMessage delegates
-            return StatusCode(500, new Response
+            if (request.Args is System.Text.Json.JsonElement jsonElement && 
+                jsonElement.ValueKind == System.Text.Json.JsonValueKind.Object)
             {
-                Success = false,
-                ErrorMessage = "Internal server error"
-            });
-        }
-    }
-
-    [HttpGet("providers")]
-    public async Task<ActionResult<IReadOnlyList<IKernelProviderManifest>>> GetProviders(
-        CancellationToken cancellationToken = default)
-    {
-        var providers = await _kernel.GetProvidersAsync(cancellationToken);
-        return Ok(providers);
-    }
-
-    [HttpGet("capabilities")]
-    public async Task<ActionResult<object>> GetCapabilities(
-        CancellationToken cancellationToken = default)
-    {
-        var providers = await _kernel.GetProvidersAsync(cancellationToken);
-        
-        // Aggregate all unique operations across all providers
-        var operations = providers
-            .SelectMany(p => p.Operations)
-            .Distinct()
-            .OrderBy(o => o)
-            .ToList();
-        
-        // Add kernel-level operations
-        operations.Add("rag-query-with-llm");
-        operations = operations.Distinct().OrderBy(o => o).ToList();
-        
-        // Aggregate all unique models across all providers
-        var models = providers
-            .SelectMany(p => p.AvailableModels)
-            .Distinct()
-            .OrderBy(m => m)
-            .ToList();
-        
-        // Return unified view without provider details
-        return Ok(new
-        {
-            availableOperations = operations,
-            availableModels = models,
-            totalProviders = providers.Count
-        });
-    }
-    
-    [HttpPost("rag-query")]
-    public async Task<ActionResult<IResponse>> RagQuery(
-        [FromBody] RagQueryRequest request,
-        CancellationToken cancellationToken = default)
-    {
-        var kernelRequest = new Request
-        {
-            Type = "rag-query-with-llm",
-            Data = new Dictionary<string, object>
-            {
-                ["collectionName"] = request.CollectionName ?? "default",
-                ["query"] = request.Query,
-                ["topK"] = request.TopK ?? 5
+                arguments = new Dictionary<string, object>();
+                foreach (var property in jsonElement.EnumerateObject())
+                {
+                    arguments[property.Name] = property.Value.ToString();
+                }
             }
-        };
+            else if (request.Args is IDictionary<string, object> dict)
+            {
+                arguments = new Dictionary<string, object>(dict);
+            }
+            else
+            {
+                arguments = new Dictionary<string, object> { ["input"] = request.Args };
+            }
+        }
         
-        var response = await _kernel.ExecuteAsync(kernelRequest, cancellationToken);
-        return Ok(response);
+        var kernelRequest = new KernelRequest(request.Function, arguments);
+        var result = await actor.Execute(kernelRequest);
+        
+        return Ok(result);
     }
 }
+
+public record ExecuteRequest(string UserId, string Function, object Args);
